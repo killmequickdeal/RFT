@@ -1,76 +1,39 @@
 import java.net.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
 import java.util.Scanner;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
 
 public class Client
 {
 	private String svrName = "127.0.0.1";
-	private Socket socket = null;
-	DataOutputStream send = null;
-	DataInputStream receive = null;
-	private static SecretKeySpec secretKey = new SecretKeySpec("5u8x/A?D(G+KbPeS".getBytes(), "AES");
-	Cipher cipher = null;
+	private Socket socket;
+	DataOutputStream send;
+	DataInputStream receive;
+	private Utility utils;
+
 	public Client(int port) throws IOException
 	{
 		socket = new Socket(svrName, port);
 		System.out.println("Just connected to " + socket.getRemoteSocketAddress());
 
+		utils = new Utility();
 		send = new DataOutputStream(socket.getOutputStream());
 		receive = new DataInputStream(socket.getInputStream());
 	}
 
-	private String ReadFile(String filename) throws IOException {
-		return new String(Files.readAllBytes(Paths.get(filename)));
+
+	public void transfer() {
+		utils.Send("transfer", send);
+		utils.Send("clientinfo.txt", send);
+        utils.GetResponse(true, receive);
+        // write file to Client folder ?
+        // TODO: check file contents
 	}
 
-	public void EncryptAndSend(String msg) {
-		try
-		{
-			send.writeUTF(EncryptAndEncodeToBase64String(msg));
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-
-	}
-
-	public void Send(String msg) {
-		try
-		{
-			send.writeUTF(msg);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-
-	}
-
-	public void requestFile() {
-		Send("transfer");
-		Send("clientinfo.txt");
-		try
-		{
-			System.out.println(decrypt(receive.readUTF()));
-			// write file to Client folder
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
-
-	public void register() {
-
+	public void register(String username, String password) {
+        utils.Send("register", send);
+        utils.EncryptAndSend(username, send);
+        utils.EncryptAndSend(password, send);
+        utils.GetResponse(false, receive);
 	}
 
 	public void create() {
@@ -102,13 +65,14 @@ public class Client
 			"5: summary\n" +
 			"6: subset\n" +
 			"7: delete\n" +
-			"8: close\n");
+			"8: close\n" +
+			"9: end program\n");
 	}
 
 	public void close() {
 		try
 		{
-			Send("exit");
+			utils.Send("exit", send);
 			System.out.println("Server says " + receive.readUTF());
 			socket.close();
 		} catch (IOException e) {
@@ -120,12 +84,16 @@ public class Client
 		// menu here which calls each function individually
 		Scanner scanner = new Scanner(System.in);
 		int choice = 0;
-		while (choice != 8) {
+		while (choice != 9) {
 			menu();
 			choice = scanner.nextInt();
 			switch (choice) {
 				case 1:
-					register();
+                    System.out.println("Please enter username: ");
+				    String username = scanner.next();
+                    System.out.println("Please enter password: ");
+				    String password = scanner.next();
+					register(username, password);
 					break;
 				case 2:
 					create();
@@ -134,7 +102,7 @@ public class Client
 					list();
 					break;
 				case 4:
-					requestFile();
+					transfer();
 					break;
 				case 5:
 					summary();
@@ -150,36 +118,6 @@ public class Client
 					break;
 			}
 		}
-	}
-
-	private String EncryptAndEncodeToBase64String(String s) {
-		String secretstring = null;
-		try
-		{
-			cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-			secretstring = Base64.getEncoder().encodeToString(cipher.doFinal(s.getBytes()));
-		} catch (NoSuchPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException
-				| BadPaddingException | InvalidKeyException ex) {
-			ex.printStackTrace();
-		}
-		return secretstring;
-	}
-
-	private String decrypt(String s) {
-		String plaintextstring = null;
-
-		try
-		{
-			cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, secretKey);
-			plaintextstring = new String(cipher.doFinal(Base64.getDecoder().decode(s)));
-		} catch (NoSuchPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException
-			| BadPaddingException | InvalidKeyException ex) {
-			ex.printStackTrace();
-		}
-
-		return plaintextstring;
 	}
 
 	public static void main(String [] args) {

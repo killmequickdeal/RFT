@@ -1,86 +1,23 @@
 import java.net.*;
 import java.io.*;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.util.Base64;
-import javax.crypto.BadPaddingException;
-import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.NoSuchPaddingException;
-import javax.crypto.spec.SecretKeySpec;
+import java.util.Map;
 
 public class Server extends Thread
 {
-	private ServerSocket svrSocket;
-	private static SecretKeySpec secretKey = new SecretKeySpec("5u8x/A?D(G+KbPeS".getBytes(), "AES");
-	Cipher cipher = null;
-	DataInputStream receive = null;
-	DataOutputStream send = null;
+	private ServerSocket socket;
+	private DataInputStream receive = null;
+	private DataOutputStream send = null;
+    private Utility utils;
+    private Map<String, String> users;
 
-	public Server(int port) throws IOException
+
+    public Server(int port) throws IOException
 	{
-		svrSocket = new ServerSocket(port);
-	}
+		socket = new ServerSocket(port);
+        utils = new Utility();
 
-	public void Send(String msg) {
-		try
-		{
-			send.writeUTF(msg);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
+    }
 
-	}
-	private String ReadFile(String filename) throws IOException
-	{
-		return new String(Files.readAllBytes(Paths.get(filename)));
-	}
-
-	private String EncryptAndEncodeToBase64String(String s) {
-		String secretstring = null;
-		try
-		{
-			cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			cipher.init(Cipher.ENCRYPT_MODE, secretKey);
-			secretstring = Base64.getEncoder().encodeToString(cipher.doFinal(s.getBytes()));
-		} catch (NoSuchPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException
-			| BadPaddingException | InvalidKeyException ex) {
-			ex.printStackTrace();
-		}
-		return secretstring;
-	}
-
-	public void EncryptAndSend(String msg) {
-		try
-		{
-			send.writeUTF(EncryptAndEncodeToBase64String(msg));
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-		}
-
-	}
-
-	private String decrypt(String s) {
-		String plaintextstring = null;
-
-		try
-		{
-			cipher = Cipher.getInstance("AES/ECB/PKCS5Padding");
-			cipher.init(Cipher.DECRYPT_MODE, secretKey);
-			plaintextstring = new String(cipher.doFinal(Base64.getDecoder().decode(s)));
-		} catch (NoSuchPaddingException | NoSuchAlgorithmException | IllegalBlockSizeException
-			| BadPaddingException | InvalidKeyException ex) {
-			ex.printStackTrace();
-		}
-
-		return plaintextstring;
-	}
 	public static void main(String [] args) {
 		try {
 			Server svr = new Server(7555);
@@ -90,20 +27,48 @@ public class Server extends Thread
 		}
 	}
 
+	public void transfer() {
+	    try {
+            String filename = receive.readUTF();
+            File[] files = new File("./Server").listFiles();
+            String filestring = null;
+            for (File file : files) {
+                if (file.getName().equals(filename)) {
+                    filestring = utils.ReadFile("./Server/" + filename);
+                    utils.EncryptAndSend(filestring, send);
+                }
+            }
+
+            if (filestring == null) {
+                utils.EncryptAndSend("Error: File Not Found", send);
+            }
+        } catch (IOException ex) {
+	        ex.printStackTrace();
+        }
+    }
+
+    public void register() {
+	    String username = utils.GetResponse(true, receive);
+	    String password = utils.GetResponse(true, receive);
+	    if (!(username.equals("Riley"))) {
+	        users.put(username, password);
+	        utils.Send("Congratulations!", send);
+        } else {
+            utils.Send("Error: Credentials are not correct", send);
+        }
+    }
+
 	public void run()
 	{
 		while (true)
 		{
 			try
 			{
-				System.out.println("Waiting for client on port " +
-					svrSocket.getLocalPort() + "...");
-				Socket server = svrSocket.accept();
-				final Base64.Decoder decoder = Base64.getDecoder();
+				System.out.println("Waiting on port " +
+					socket.getLocalPort());
+				Socket server = socket.accept();
 
-				System.out.println("Just connected to " + server.getRemoteSocketAddress());
-
-
+				System.out.println("Connection established with: " + server.getRemoteSocketAddress());
 
 				receive = new DataInputStream(server.getInputStream());
 				send = new DataOutputStream(server.getOutputStream());
@@ -116,44 +81,24 @@ public class Server extends Thread
 
 					switch(msg) {
 						case "transfer":
-							System.out.println("in transfer");
-							String filename = receive.readUTF();
-							File[] files = new File("./Server").listFiles();
-							String filestring = null;
-							for(File file : files) {
-								if (file.getName().equals(filename)) {
-									filestring = ReadFile("./Server/" + filename);
-									EncryptAndSend(filestring);
-								}
-							}
-
-							if(filestring == null) {
-								EncryptAndSend("Error: File Not Found");
-							}
+							transfer();
 							break;
-
+                        case "register":
+                            register();
+                            break;
 						case "exit":
-							System.out.println("in exit");
-
-							keepReceiving = false;
-							send.writeUTF("Goodbye!");
-							server.close();
+                            keepReceiving = false;
+                            send.writeUTF("Goodbye!");
+                            server.close();
 							break;
 
 					}
 
 				}
+			} catch (IOException ex) {
+				ex.printStackTrace();
 			}
-			catch (SocketTimeoutException s)
-			{
-				System.out.println("Socket timed out!");
-				break;
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-				break;
-			}
+
 		}
 	}
 }
