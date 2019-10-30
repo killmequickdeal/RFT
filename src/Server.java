@@ -21,8 +21,9 @@ public class Server extends Thread
 	public static void main(String [] args) {
         try {
             ServerSocket serversocket = new ServerSocket(7555);
-
+            System.out.println("Waiting for connections");
             while(true) {
+                System.out.println("Connection established");
                 new Thread(new Server(serversocket.accept())).start();
             }
         } catch (IOException ex) {
