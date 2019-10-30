@@ -58,10 +58,10 @@ public class Server extends Thread
 	    try {
             File[] files = new File("./Server").listFiles();
             String filestring;
-            boolean filefound = false;
+            boolean filenotfound = true;
             for (File file : files) {
                 if (file.getName().equals(filename)) {
-					filefound = true;
+					filenotfound = false;
                     filestring = utils.ReadFile("./Server/" + filename);
 
                     if (byzantine()) {
@@ -73,8 +73,8 @@ public class Server extends Thread
                 }
             }
 
-            if (!filefound) {
-                utils.Send(true, "Error: File Not Found", send);
+            if (filenotfound) {
+                utils.Send(true, "ERROR: File Not Found", send);
             }
         } catch (IOException ex) {
 	        ex.printStackTrace();
@@ -89,14 +89,14 @@ public class Server extends Thread
 	        // send congratulation message
 	        utils.Send(false, "Congratulations!", send);
         } else {
-			// send error message
-			utils.Send(false,"Error: Credentials are not correct", send);
+			// send ERROR message
+			utils.Send(false,"ERROR: Credentials are not correct", send);
         }
     }
 
 	private void create(String filename) {
 		// check if file exists
-		// if not, create file. If it does exist send error
+		// if not, create file. If it does exist send ERROR
 		if (!FileExists(filename)) {
 			utils.WriteFile("./Server/"+filename, utils.CreateRandomContents());
 			utils.Send(false,  filename + " created", send);
@@ -108,7 +108,7 @@ public class Server extends Thread
 	private void list() {
 		File[] files = new File("./Server").listFiles();
 		if (files.length == 0) {
-			// send error if no files
+			// send ERROR if no files
 			utils.Send(false, "No files available on server", send);
 		} else {
 			String filelist = "";
@@ -122,7 +122,7 @@ public class Server extends Thread
 
 	private void summary(String filename) throws IOException {
     	//if file exists create the summary
-		//otherwise send error
+		//otherwise send ERROR
 		if (FileExists(filename)) {
 			String filestring = utils.ReadFile("./Server/" + filename);
 			String[] words = filestring.split("\\s+");
@@ -139,7 +139,7 @@ public class Server extends Thread
 	private void subset(String filename) throws IOException {
 
     	// if file exists return a subset of the file
-		// otherwise send an error
+		// otherwise send an ERROR
 		if (FileExists(filename)) {
 			String filestring = utils.GetSubstring(utils.ReadFile("./Server/" + filename));
 			// if byzantine behavior triggers, get another substring
@@ -151,14 +151,14 @@ public class Server extends Thread
             utils.Send(true, Integer.toString(filestring.hashCode()), send);
 
         } else {
-			utils.Send(false, "ERROR: File Not Found", send);
+			utils.Send(true, "ERROR: File Not Found", send);
 		}
 	}
 
 	private void delete(String filename) {
     	// if the file exists, delete it
-		// if deletion fails send an error
-		// if file does not exist send an error
+		// if deletion fails send an ERROR
+		// if file does not exist send an ERROR
 		if (FileExists(filename)) {
 			File file = new File("./Server/"+filename);
 			if (file.delete())

@@ -185,6 +185,7 @@ public class Client
 	public static void main(String [] args) {
 		try {
 			Client client = new Client("10.234.136.56", 7555);
+
 			client.run();
 		} catch (Exception ex) {
 			ex.printStackTrace();
