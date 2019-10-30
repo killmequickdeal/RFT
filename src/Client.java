@@ -1,5 +1,6 @@
 import java.net.*;
 import java.io.*;
+import java.util.InputMismatchException;
 import java.util.Scanner;
 
 public class Client
@@ -171,15 +172,17 @@ public class Client
 			}
 		} catch (IOException ex) {
 			ex.printStackTrace();
-		}
+		} catch (InputMismatchException ex) {
+		    ex.printStackTrace();
+        }
 	}
 
 	public static void main(String [] args) {
 		try {
 			Client client = new Client("10.234.136.56", 7555);
 			client.run();
-		} catch (IOException e) {
-			e.printStackTrace();
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 }
