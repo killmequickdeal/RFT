@@ -28,12 +28,6 @@ public class Server extends Thread
         } catch (IOException ex) {
             ex.printStackTrace();
         }
-//		try {
-//			Server svr = new Server(7555);
-//			svr.run();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
 	}
 
 	private boolean byzantine() {
@@ -174,19 +168,6 @@ public class Server extends Thread
 
 	public void run()
 	{
-		// loop while server is on
-//		while (true)
-//		{
-//			try
-//			{
-//				// wait for client connection
-//				System.out.println("Waiting on port " +
-//					socket.getLocalPort());
-//				Socket server = socket.accept();
-
-//				System.out.println("Connection established with: " + server.getRemoteSocketAddress());
-
-				// create input and output streams from socket
             try
             {
                 receive = new DataInputStream(server.getInputStream());

@@ -1,6 +1,10 @@
 #Distributed-Computing-Project-2 (File Transfer)
 From the directory this README is in the following commands can be used
 
+
+#NOTE TO THE TA: Multiple clients work at a time (for bonus points)
+https://github.com/killmequickdeal/RFT
+
 ####make 
     Build the .class files for all java files 
 ####make clean 
