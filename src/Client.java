@@ -27,9 +27,9 @@ public class Client
 		utils.Send(false, filename, send);
 
 		// get the hash of the file and file content responses
-        try {
+        String filecontents = utils.GetResponse(true, receive);
+        if (!filecontents.startsWith("ERROR")) {
             int hashcode = Integer.parseInt(utils.GetResponse(true, receive));
-            String filecontents = utils.GetResponse(true, receive);
 
             // if the hash sent from the server does not match the hash computed on the client
             // then file was corrupted in transfer, print an error
@@ -39,8 +39,6 @@ public class Client
             } else {
                 utils.WriteFile("./Client/" + filename, filecontents);
             }
-        } catch (NumberFormatException ex) {
-            utils.GetResponse(true, receive);
         }
 	}
 
@@ -77,18 +75,17 @@ public class Client
 		utils.Send(false, filename, send);
 
 		// get the hash of the file and file content responses
-        try {
+        String filecontents = utils.GetResponse(true, receive);
+        if (!filecontents.startsWith("ERROR")) {
             int hashcode = Integer.parseInt(utils.GetResponse(true, receive));
-            String filecontents = utils.GetResponse(true, receive);
 
             // if the hash sent from the server does not match the hash computed on the client
             // then file was corrupted in transfer, print an error
             if (hashcode != filecontents.hashCode()) {
                 System.out.println("ERROR: File contents are incorrect, they must have been corrupted in transfer");
             }
-        } catch (NumberFormatException ex) {
-            utils.GetResponse(true, receive);
         }
+
 	}
 
 	private void delete(String filename) throws IOException {

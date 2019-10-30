@@ -63,12 +63,13 @@ public class Server extends Thread
                 if (file.getName().equals(filename)) {
 					filefound = true;
                     filestring = utils.ReadFile("./Server/" + filename);
-                    utils.Send(true, Integer.toString(filestring.hashCode()), send);
 
                     if (byzantine()) {
                     	filestring = utils.GetSubstring(filestring);
 					}
                     utils.Send(true, filestring, send);
+                    utils.Send(true, Integer.toString(filestring.hashCode()), send);
+
                 }
             }
 
@@ -141,15 +142,15 @@ public class Server extends Thread
 		// otherwise send an error
 		if (FileExists(filename)) {
 			String filestring = utils.GetSubstring(utils.ReadFile("./Server/" + filename));
-			utils.Send(true, Integer.toString(filestring.hashCode()), send);
 			// if byzantine behavior triggers, get another substring
 			if (byzantine()) {
 				filestring = utils.GetSubstring(filestring);
 			}
 
 			utils.Send(true, filestring, send);
+            utils.Send(true, Integer.toString(filestring.hashCode()), send);
 
-		} else {
+        } else {
 			utils.Send(false, "ERROR: File Not Found", send);
 		}
 	}
