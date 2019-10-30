@@ -42,12 +42,12 @@ public class Server extends Thread
 
 	private boolean FileExists(String filename) {
 		File[] files = new File("./Server").listFiles();
-		boolean fileexists = true;
+		boolean fileexists = false;
 		for (File file : files)
 		{
 			if (file.getName().equals(filename))
 			{
-				fileexists = false;
+				fileexists = true;
 			}
 		}
 
@@ -96,7 +96,7 @@ public class Server extends Thread
 	private void create(String filename) {
 		// check if file exists
 		// if not, create file. If it does exist send error
-		if (FileExists(filename)) {
+		if (!FileExists(filename)) {
 			utils.WriteFile("./Server/"+filename, utils.CreateRandomContents());
 			utils.Send(false,  filename + " created", send);
 		} else {
