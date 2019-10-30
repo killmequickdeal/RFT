@@ -4,13 +4,12 @@ import java.util.Scanner;
 
 public class Client
 {
-	private String svrName = "127.0.0.1";
 	private Socket socket;
 	private DataOutputStream send;
 	private DataInputStream receive;
 	private Utility utils;
 
-	public Client(int port) throws IOException
+	public Client(String svrName, int port) throws IOException
 	{
 		socket = new Socket(svrName, port);
 		System.out.println("Just connected to " + socket.getRemoteSocketAddress());
@@ -92,7 +91,7 @@ public class Client
 
 	private void menu() {
 		// print out menu for client
-		System.out.print("\nChoose an option:\n" +
+		System.out.print("\n\nChoose an option:\n" +
 			"1: register\n" +
 			"2: create\n" +
 			"3: list\n" +
@@ -100,7 +99,7 @@ public class Client
 			"5: summary\n" +
 			"6: subset\n" +
 			"7: delete\n" +
-			"8: close\n");
+			"8: close\n\n");
 	}
 
 	private void close() {
@@ -177,7 +176,7 @@ public class Client
 
 	public static void main(String [] args) {
 		try {
-			Client client = new Client(7555);
+			Client client = new Client("10.234.136.56", 7555);
 			client.run();
 		} catch (IOException e) {
 			e.printStackTrace();
