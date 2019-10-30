@@ -1,4 +1,3 @@
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import java.net.*;
 import java.io.*;
 import java.util.HashMap;
@@ -6,28 +5,35 @@ import java.util.Map;
 
 public class Server extends Thread
 {
-	private ServerSocket socket;
+	private Socket server;
 	private DataInputStream receive = null;
 	private DataOutputStream send = null;
-    private Utility utils;
+    private Utility utils = new Utility();
     private Map<String, String> users = new HashMap<>();
 
 
 
-    public Server(int port) throws IOException
+    public Server(Socket serversocket)
 	{
-		socket = new ServerSocket(port);
-        utils = new Utility();
-
+		server = serversocket;
     }
 
 	public static void main(String [] args) {
-		try {
-			Server svr = new Server(7555);
-			svr.run();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+        try {
+            ServerSocket serversocket = new ServerSocket(7555);
+
+            while(true) {
+                new Thread(new Server(serversocket.accept())).start();
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+//		try {
+//			Server svr = new Server(7555);
+//			svr.run();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	private boolean byzantine() {
@@ -168,21 +174,22 @@ public class Server extends Thread
 	public void run()
 	{
 		// loop while server is on
-		while (true)
-		{
-			try
-			{
-				// wait for client connection
-				System.out.println("Waiting on port " +
-					socket.getLocalPort());
-				Socket server = socket.accept();
+//		while (true)
+//		{
+//			try
+//			{
+//				// wait for client connection
+//				System.out.println("Waiting on port " +
+//					socket.getLocalPort());
+//				Socket server = socket.accept();
 
-				System.out.println("Connection established with: " + server.getRemoteSocketAddress());
+//				System.out.println("Connection established with: " + server.getRemoteSocketAddress());
 
 				// create input and output streams from socket
-				receive = new DataInputStream(server.getInputStream());
-				send = new DataOutputStream(server.getOutputStream());
-
+            try
+            {
+                receive = new DataInputStream(server.getInputStream());
+                send = new DataOutputStream(server.getOutputStream());
 				String msg;
 				boolean keepReceiving = true;
 				try
@@ -238,4 +245,4 @@ public class Server extends Thread
 			}
 		}
 	}
-}
+//}
