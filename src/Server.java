@@ -96,7 +96,7 @@ public class Server extends Thread
 	private void create(String filename) {
 		// check if file exists
 		// if not, create file. If it does exist send error
-		if (!FileExists(filename)) {
+		if (FileExists(filename)) {
 			utils.WriteFile("./Server/"+filename, utils.CreateRandomContents());
 			utils.Send(false,  filename + " created", send);
 		} else {
